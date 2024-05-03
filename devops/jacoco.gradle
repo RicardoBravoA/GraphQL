@@ -1,0 +1,54 @@
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+tasks.withType(Test).configureEach {
+    jacoco.includeNoLocationClasses = true
+    jacoco.excludes = ['jdk.internal.*']
+}
+
+project.afterEvaluate {
+    (android.hasProperty('applicationVariants') ? android.'applicationVariants' : android.'libraryVariants').all { variant ->
+        def variantName = variant.name
+        def unitTestTask = "test${variantName.capitalize()}UnitTest"
+
+        tasks.create(name: "${unitTestTask}Coverage", type: JacocoReport, dependsOn: "$unitTestTask") {
+            group = "Reporting"
+            description = "Generate Jacoco coverage reports for ${variantName.capitalize()} build"
+
+            reports {
+                csv.required = false
+                xml.required = true
+                html.required = true
+            }
+
+            def excludes = [
+                    '**/Manifest*.*',
+                    '**/app/**',
+                    '**/model/**',
+                    '**/api/**',
+                    '**/di/**',
+                    '**/mapper/**',
+                    '**/*Activity*.*',
+                    '**/*Screen*.*',
+                    '**/ui/**',
+                    '**/graphqltest/adapter/**',
+                    '**/graphqltest/type/**',
+                    '**/graphqltest/selections/**',
+                    '**/*Query*.*'
+            ]
+
+            def coverageSourceDirs = [
+                    "$project.projectDir/src/main/java",
+                    "$project.projectDir/src/${variantName}/java"
+            ]
+
+            classDirectories.setFrom(files([fileTree(dir: "${buildDir}/tmp/kotlin-classes/${variantName}", exclude: excludes)]))
+            additionalClassDirs.setFrom(files(coverageSourceDirs))
+            sourceDirectories.setFrom(files([coverageSourceDirs]))
+            executionData.setFrom(fileTree("$project.buildDir/jacoco/${unitTestTask}.exec"))
+        }
+    }
+}

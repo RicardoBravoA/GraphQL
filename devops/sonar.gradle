@@ -1,0 +1,22 @@
+apply plugin: 'org.sonarqube'
+
+def sonarKey = rootProject.ext.sonarKey
+
+sonarqube {
+    properties {
+        property "sonar.projectName", "GraphQLTest"
+        property "sonar.projectKey", "GraphQLTest"
+        property "sonar.host.url", "http://localhost:9000"
+        property "sonar.login", sonarKey
+        property "sonar.language", "kotlin"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.language", "kotlin"
+        property "sonar.exclusions", "**/Manifest*.*, **/app/**, **/model/**, **/api/**,\n" +
+                "**/di/**, **/mapper/**, **/*Activity*.*, **/*Screen*.*,\n" +
+                "**/ui/**, **/graphqltest/adapter/**, **/graphqltest/type/**,\n" +
+                "**/*Query*.*, **/graphqltest/selections/**"
+        property "sonar.coverage.jacoco.xmlReportPaths", "$project.rootDir/app/build/reports/jacoco/testDebugUnitTestCoverage/testDebugUnitTestCoverage.xml"
+    }
+}
+
+tasks.sonar.dependsOn ":app:testDebugUnitTestCoverage"
